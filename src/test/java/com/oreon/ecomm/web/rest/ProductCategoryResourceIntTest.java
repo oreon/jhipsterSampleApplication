@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.ProductCategory;
 import com.oreon.ecomm.repository.ProductCategoryRepository;
+import com.oreon.ecomm.service.ProductCategoryService;
 import com.oreon.ecomm.repository.search.ProductCategorySearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -49,6 +50,9 @@ public class ProductCategoryResourceIntTest {
     private ProductCategoryRepository productCategoryRepository;
 
     @Autowired
+    private ProductCategoryService productCategoryService;
+
+    @Autowired
     private ProductCategorySearchRepository productCategorySearchRepository;
 
     @Autowired
@@ -70,7 +74,7 @@ public class ProductCategoryResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ProductCategoryResource productCategoryResource = new ProductCategoryResource(productCategoryRepository, productCategorySearchRepository);
+        final ProductCategoryResource productCategoryResource = new ProductCategoryResource(productCategoryService);
         this.restProductCategoryMockMvc = MockMvcBuilders.standaloneSetup(productCategoryResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -199,8 +203,8 @@ public class ProductCategoryResourceIntTest {
     @Transactional
     public void updateProductCategory() throws Exception {
         // Initialize the database
-        productCategoryRepository.saveAndFlush(productCategory);
-        productCategorySearchRepository.save(productCategory);
+        productCategoryService.save(productCategory);
+
         int databaseSizeBeforeUpdate = productCategoryRepository.findAll().size();
 
         // Update the productCategory
@@ -250,8 +254,8 @@ public class ProductCategoryResourceIntTest {
     @Transactional
     public void deleteProductCategory() throws Exception {
         // Initialize the database
-        productCategoryRepository.saveAndFlush(productCategory);
-        productCategorySearchRepository.save(productCategory);
+        productCategoryService.save(productCategory);
+
         int databaseSizeBeforeDelete = productCategoryRepository.findAll().size();
 
         // Get the productCategory
@@ -272,8 +276,7 @@ public class ProductCategoryResourceIntTest {
     @Transactional
     public void searchProductCategory() throws Exception {
         // Initialize the database
-        productCategoryRepository.saveAndFlush(productCategory);
-        productCategorySearchRepository.save(productCategory);
+        productCategoryService.save(productCategory);
 
         // Search the productCategory
         restProductCategoryMockMvc.perform(get("/api/_search/product-categories?query=id:" + productCategory.getId()))

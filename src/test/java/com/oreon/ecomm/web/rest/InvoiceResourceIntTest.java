@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.Invoice;
 import com.oreon.ecomm.repository.InvoiceRepository;
+import com.oreon.ecomm.service.InvoiceService;
 import com.oreon.ecomm.repository.search.InvoiceSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -66,6 +67,9 @@ public class InvoiceResourceIntTest {
     private InvoiceRepository invoiceRepository;
 
     @Autowired
+    private InvoiceService invoiceService;
+
+    @Autowired
     private InvoiceSearchRepository invoiceSearchRepository;
 
     @Autowired
@@ -87,7 +91,7 @@ public class InvoiceResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final InvoiceResource invoiceResource = new InvoiceResource(invoiceRepository, invoiceSearchRepository);
+        final InvoiceResource invoiceResource = new InvoiceResource(invoiceService);
         this.restInvoiceMockMvc = MockMvcBuilders.standaloneSetup(invoiceResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -304,8 +308,8 @@ public class InvoiceResourceIntTest {
     @Transactional
     public void updateInvoice() throws Exception {
         // Initialize the database
-        invoiceRepository.saveAndFlush(invoice);
-        invoiceSearchRepository.save(invoice);
+        invoiceService.save(invoice);
+
         int databaseSizeBeforeUpdate = invoiceRepository.findAll().size();
 
         // Update the invoice
@@ -363,8 +367,8 @@ public class InvoiceResourceIntTest {
     @Transactional
     public void deleteInvoice() throws Exception {
         // Initialize the database
-        invoiceRepository.saveAndFlush(invoice);
-        invoiceSearchRepository.save(invoice);
+        invoiceService.save(invoice);
+
         int databaseSizeBeforeDelete = invoiceRepository.findAll().size();
 
         // Get the invoice
@@ -385,8 +389,7 @@ public class InvoiceResourceIntTest {
     @Transactional
     public void searchInvoice() throws Exception {
         // Initialize the database
-        invoiceRepository.saveAndFlush(invoice);
-        invoiceSearchRepository.save(invoice);
+        invoiceService.save(invoice);
 
         // Search the invoice
         restInvoiceMockMvc.perform(get("/api/_search/invoices?query=id:" + invoice.getId()))

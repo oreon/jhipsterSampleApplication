@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.OrderItem;
 import com.oreon.ecomm.repository.OrderItemRepository;
+import com.oreon.ecomm.service.OrderItemService;
 import com.oreon.ecomm.repository.search.OrderItemSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -54,6 +55,9 @@ public class OrderItemResourceIntTest {
     private OrderItemRepository orderItemRepository;
 
     @Autowired
+    private OrderItemService orderItemService;
+
+    @Autowired
     private OrderItemSearchRepository orderItemSearchRepository;
 
     @Autowired
@@ -75,7 +79,7 @@ public class OrderItemResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final OrderItemResource orderItemResource = new OrderItemResource(orderItemRepository, orderItemSearchRepository);
+        final OrderItemResource orderItemResource = new OrderItemResource(orderItemService);
         this.restOrderItemMockMvc = MockMvcBuilders.standaloneSetup(orderItemResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -244,8 +248,8 @@ public class OrderItemResourceIntTest {
     @Transactional
     public void updateOrderItem() throws Exception {
         // Initialize the database
-        orderItemRepository.saveAndFlush(orderItem);
-        orderItemSearchRepository.save(orderItem);
+        orderItemService.save(orderItem);
+
         int databaseSizeBeforeUpdate = orderItemRepository.findAll().size();
 
         // Update the orderItem
@@ -297,8 +301,8 @@ public class OrderItemResourceIntTest {
     @Transactional
     public void deleteOrderItem() throws Exception {
         // Initialize the database
-        orderItemRepository.saveAndFlush(orderItem);
-        orderItemSearchRepository.save(orderItem);
+        orderItemService.save(orderItem);
+
         int databaseSizeBeforeDelete = orderItemRepository.findAll().size();
 
         // Get the orderItem
@@ -319,8 +323,7 @@ public class OrderItemResourceIntTest {
     @Transactional
     public void searchOrderItem() throws Exception {
         // Initialize the database
-        orderItemRepository.saveAndFlush(orderItem);
-        orderItemSearchRepository.save(orderItem);
+        orderItemService.save(orderItem);
 
         // Search the orderItem
         restOrderItemMockMvc.perform(get("/api/_search/order-items?query=id:" + orderItem.getId()))

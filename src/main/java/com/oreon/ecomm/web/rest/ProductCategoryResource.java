@@ -2,9 +2,7 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.ProductCategory;
-
-import com.oreon.ecomm.repository.ProductCategoryRepository;
-import com.oreon.ecomm.repository.search.ProductCategorySearchRepository;
+import com.oreon.ecomm.service.ProductCategoryService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
 import io.github.jhipster.web.util.ResponseUtil;
@@ -19,7 +17,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +32,10 @@ public class ProductCategoryResource {
 
     private static final String ENTITY_NAME = "productCategory";
 
-    private final ProductCategoryRepository productCategoryRepository;
+    private final ProductCategoryService productCategoryService;
 
-    private final ProductCategorySearchRepository productCategorySearchRepository;
-
-    public ProductCategoryResource(ProductCategoryRepository productCategoryRepository, ProductCategorySearchRepository productCategorySearchRepository) {
-        this.productCategoryRepository = productCategoryRepository;
-        this.productCategorySearchRepository = productCategorySearchRepository;
+    public ProductCategoryResource(ProductCategoryService productCategoryService) {
+        this.productCategoryService = productCategoryService;
     }
 
     /**
@@ -58,8 +52,7 @@ public class ProductCategoryResource {
         if (productCategory.getId() != null) {
             throw new BadRequestAlertException("A new productCategory cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        ProductCategory result = productCategoryRepository.save(productCategory);
-        productCategorySearchRepository.save(result);
+        ProductCategory result = productCategoryService.save(productCategory);
         return ResponseEntity.created(new URI("/api/product-categories/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +74,7 @@ public class ProductCategoryResource {
         if (productCategory.getId() == null) {
             return createProductCategory(productCategory);
         }
-        ProductCategory result = productCategoryRepository.save(productCategory);
-        productCategorySearchRepository.save(result);
+        ProductCategory result = productCategoryService.save(productCategory);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, productCategory.getId().toString()))
             .body(result);
@@ -97,7 +89,7 @@ public class ProductCategoryResource {
     @Timed
     public List<ProductCategory> getAllProductCategories() {
         log.debug("REST request to get all ProductCategories");
-        return productCategoryRepository.findAll();
+        return productCategoryService.findAll();
         }
 
     /**
@@ -110,7 +102,7 @@ public class ProductCategoryResource {
     @Timed
     public ResponseEntity<ProductCategory> getProductCategory(@PathVariable Long id) {
         log.debug("REST request to get ProductCategory : {}", id);
-        ProductCategory productCategory = productCategoryRepository.findOne(id);
+        ProductCategory productCategory = productCategoryService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(productCategory));
     }
 
@@ -124,8 +116,7 @@ public class ProductCategoryResource {
     @Timed
     public ResponseEntity<Void> deleteProductCategory(@PathVariable Long id) {
         log.debug("REST request to delete ProductCategory : {}", id);
-        productCategoryRepository.delete(id);
-        productCategorySearchRepository.delete(id);
+        productCategoryService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -140,9 +131,7 @@ public class ProductCategoryResource {
     @Timed
     public List<ProductCategory> searchProductCategories(@RequestParam String query) {
         log.debug("REST request to search ProductCategories for query {}", query);
-        return StreamSupport
-            .stream(productCategorySearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+        return productCategoryService.search(query);
     }
 
 }

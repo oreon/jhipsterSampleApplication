@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.Shipment;
 import com.oreon.ecomm.repository.ShipmentRepository;
+import com.oreon.ecomm.service.ShipmentService;
 import com.oreon.ecomm.repository.search.ShipmentSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -54,6 +55,9 @@ public class ShipmentResourceIntTest {
     private ShipmentRepository shipmentRepository;
 
     @Autowired
+    private ShipmentService shipmentService;
+
+    @Autowired
     private ShipmentSearchRepository shipmentSearchRepository;
 
     @Autowired
@@ -75,7 +79,7 @@ public class ShipmentResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ShipmentResource shipmentResource = new ShipmentResource(shipmentRepository, shipmentSearchRepository);
+        final ShipmentResource shipmentResource = new ShipmentResource(shipmentService);
         this.restShipmentMockMvc = MockMvcBuilders.standaloneSetup(shipmentResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -208,8 +212,8 @@ public class ShipmentResourceIntTest {
     @Transactional
     public void updateShipment() throws Exception {
         // Initialize the database
-        shipmentRepository.saveAndFlush(shipment);
-        shipmentSearchRepository.save(shipment);
+        shipmentService.save(shipment);
+
         int databaseSizeBeforeUpdate = shipmentRepository.findAll().size();
 
         // Update the shipment
@@ -261,8 +265,8 @@ public class ShipmentResourceIntTest {
     @Transactional
     public void deleteShipment() throws Exception {
         // Initialize the database
-        shipmentRepository.saveAndFlush(shipment);
-        shipmentSearchRepository.save(shipment);
+        shipmentService.save(shipment);
+
         int databaseSizeBeforeDelete = shipmentRepository.findAll().size();
 
         // Get the shipment
@@ -283,8 +287,7 @@ public class ShipmentResourceIntTest {
     @Transactional
     public void searchShipment() throws Exception {
         // Initialize the database
-        shipmentRepository.saveAndFlush(shipment);
-        shipmentSearchRepository.save(shipment);
+        shipmentService.save(shipment);
 
         // Search the shipment
         restShipmentMockMvc.perform(get("/api/_search/shipments?query=id:" + shipment.getId()))

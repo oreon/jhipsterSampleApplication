@@ -2,14 +2,17 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.ProductOrder;
-
-import com.oreon.ecomm.repository.ProductOrderRepository;
-import com.oreon.ecomm.repository.search.ProductOrderSearchRepository;
+import com.oreon.ecomm.service.ProductOrderService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
+import com.oreon.ecomm.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +37,10 @@ public class ProductOrderResource {
 
     private static final String ENTITY_NAME = "productOrder";
 
-    private final ProductOrderRepository productOrderRepository;
+    private final ProductOrderService productOrderService;
 
-    private final ProductOrderSearchRepository productOrderSearchRepository;
-
-    public ProductOrderResource(ProductOrderRepository productOrderRepository, ProductOrderSearchRepository productOrderSearchRepository) {
-        this.productOrderRepository = productOrderRepository;
-        this.productOrderSearchRepository = productOrderSearchRepository;
+    public ProductOrderResource(ProductOrderService productOrderService) {
+        this.productOrderService = productOrderService;
     }
 
     /**
@@ -58,8 +57,7 @@ public class ProductOrderResource {
         if (productOrder.getId() != null) {
             throw new BadRequestAlertException("A new productOrder cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        ProductOrder result = productOrderRepository.save(productOrder);
-        productOrderSearchRepository.save(result);
+        ProductOrder result = productOrderService.save(productOrder);
         return ResponseEntity.created(new URI("/api/product-orders/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +79,7 @@ public class ProductOrderResource {
         if (productOrder.getId() == null) {
             return createProductOrder(productOrder);
         }
-        ProductOrder result = productOrderRepository.save(productOrder);
-        productOrderSearchRepository.save(result);
+        ProductOrder result = productOrderService.save(productOrder);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, productOrder.getId().toString()))
             .body(result);
@@ -91,14 +88,17 @@ public class ProductOrderResource {
     /**
      * GET  /product-orders : get all the productOrders.
      *
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of productOrders in body
      */
     @GetMapping("/product-orders")
     @Timed
-    public List<ProductOrder> getAllProductOrders() {
-        log.debug("REST request to get all ProductOrders");
-        return productOrderRepository.findAll();
-        }
+    public ResponseEntity<List<ProductOrder>> getAllProductOrders(Pageable pageable) {
+        log.debug("REST request to get a page of ProductOrders");
+        Page<ProductOrder> page = productOrderService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/product-orders");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     /**
      * GET  /product-orders/:id : get the "id" productOrder.
@@ -110,7 +110,7 @@ public class ProductOrderResource {
     @Timed
     public ResponseEntity<ProductOrder> getProductOrder(@PathVariable Long id) {
         log.debug("REST request to get ProductOrder : {}", id);
-        ProductOrder productOrder = productOrderRepository.findOne(id);
+        ProductOrder productOrder = productOrderService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(productOrder));
     }
 
@@ -124,8 +124,7 @@ public class ProductOrderResource {
     @Timed
     public ResponseEntity<Void> deleteProductOrder(@PathVariable Long id) {
         log.debug("REST request to delete ProductOrder : {}", id);
-        productOrderRepository.delete(id);
-        productOrderSearchRepository.delete(id);
+        productOrderService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -134,15 +133,16 @@ public class ProductOrderResource {
      * to the query.
      *
      * @param query the query of the productOrder search
+     * @param pageable the pagination information
      * @return the result of the search
      */
     @GetMapping("/_search/product-orders")
     @Timed
-    public List<ProductOrder> searchProductOrders(@RequestParam String query) {
-        log.debug("REST request to search ProductOrders for query {}", query);
-        return StreamSupport
-            .stream(productOrderSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<ProductOrder>> searchProductOrders(@RequestParam String query, Pageable pageable) {
+        log.debug("REST request to search for a page of ProductOrders for query {}", query);
+        Page<ProductOrder> page = productOrderService.search(query, pageable);
+        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/product-orders");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

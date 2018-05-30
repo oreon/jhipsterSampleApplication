@@ -93,3 +93,6 @@ relationship OneToMany {
    Invoice{shipment} to Shipment{invoice},
    ProductCategory{product} to Product{productCategory}
 }
+
+service * with serviceClass
+paginate Product, Customer, ProductOrder, Invoice, Shipment, OrderItem with pagination

@@ -2,14 +2,17 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.Product;
-
-import com.oreon.ecomm.repository.ProductRepository;
-import com.oreon.ecomm.repository.search.ProductSearchRepository;
+import com.oreon.ecomm.service.ProductService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
+import com.oreon.ecomm.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +37,10 @@ public class ProductResource {
 
     private static final String ENTITY_NAME = "product";
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    private final ProductSearchRepository productSearchRepository;
-
-    public ProductResource(ProductRepository productRepository, ProductSearchRepository productSearchRepository) {
-        this.productRepository = productRepository;
-        this.productSearchRepository = productSearchRepository;
+    public ProductResource(ProductService productService) {
+        this.productService = productService;
     }
 
     /**
@@ -58,8 +57,7 @@ public class ProductResource {
         if (product.getId() != null) {
             throw new BadRequestAlertException("A new product cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Product result = productRepository.save(product);
-        productSearchRepository.save(result);
+        Product result = productService.save(product);
         return ResponseEntity.created(new URI("/api/products/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +79,7 @@ public class ProductResource {
         if (product.getId() == null) {
             return createProduct(product);
         }
-        Product result = productRepository.save(product);
-        productSearchRepository.save(result);
+        Product result = productService.save(product);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, product.getId().toString()))
             .body(result);
@@ -91,14 +88,17 @@ public class ProductResource {
     /**
      * GET  /products : get all the products.
      *
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of products in body
      */
     @GetMapping("/products")
     @Timed
-    public List<Product> getAllProducts() {
-        log.debug("REST request to get all Products");
-        return productRepository.findAll();
-        }
+    public ResponseEntity<List<Product>> getAllProducts(Pageable pageable) {
+        log.debug("REST request to get a page of Products");
+        Page<Product> page = productService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/products");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     /**
      * GET  /products/:id : get the "id" product.
@@ -110,7 +110,7 @@ public class ProductResource {
     @Timed
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
         log.debug("REST request to get Product : {}", id);
-        Product product = productRepository.findOne(id);
+        Product product = productService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(product));
     }
 
@@ -124,8 +124,7 @@ public class ProductResource {
     @Timed
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         log.debug("REST request to delete Product : {}", id);
-        productRepository.delete(id);
-        productSearchRepository.delete(id);
+        productService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -134,15 +133,16 @@ public class ProductResource {
      * to the query.
      *
      * @param query the query of the product search
+     * @param pageable the pagination information
      * @return the result of the search
      */
     @GetMapping("/_search/products")
     @Timed
-    public List<Product> searchProducts(@RequestParam String query) {
-        log.debug("REST request to search Products for query {}", query);
-        return StreamSupport
-            .stream(productSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<Product>> searchProducts(@RequestParam String query, Pageable pageable) {
+        log.debug("REST request to search for a page of Products for query {}", query);
+        Page<Product> page = productService.search(query, pageable);
+        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/products");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

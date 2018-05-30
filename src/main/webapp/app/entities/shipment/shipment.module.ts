@@ -13,6 +13,7 @@ import {
     ShipmentDeleteDialogComponent,
     shipmentRoute,
     shipmentPopupRoute,
+    ShipmentResolvePagingParams,
 } from './';
 
 const ENTITY_STATES = [
@@ -43,6 +44,7 @@ const ENTITY_STATES = [
     providers: [
         ShipmentService,
         ShipmentPopupService,
+        ShipmentResolvePagingParams,
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

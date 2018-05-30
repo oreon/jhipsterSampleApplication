@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.Product;
 import com.oreon.ecomm.repository.ProductRepository;
+import com.oreon.ecomm.service.ProductService;
 import com.oreon.ecomm.repository.search.ProductSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -63,6 +64,9 @@ public class ProductResourceIntTest {
     private ProductRepository productRepository;
 
     @Autowired
+    private ProductService productService;
+
+    @Autowired
     private ProductSearchRepository productSearchRepository;
 
     @Autowired
@@ -84,7 +88,7 @@ public class ProductResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ProductResource productResource = new ProductResource(productRepository, productSearchRepository);
+        final ProductResource productResource = new ProductResource(productService);
         this.restProductMockMvc = MockMvcBuilders.standaloneSetup(productResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -265,8 +269,8 @@ public class ProductResourceIntTest {
     @Transactional
     public void updateProduct() throws Exception {
         // Initialize the database
-        productRepository.saveAndFlush(product);
-        productSearchRepository.save(product);
+        productService.save(product);
+
         int databaseSizeBeforeUpdate = productRepository.findAll().size();
 
         // Update the product
@@ -324,8 +328,8 @@ public class ProductResourceIntTest {
     @Transactional
     public void deleteProduct() throws Exception {
         // Initialize the database
-        productRepository.saveAndFlush(product);
-        productSearchRepository.save(product);
+        productService.save(product);
+
         int databaseSizeBeforeDelete = productRepository.findAll().size();
 
         // Get the product
@@ -346,8 +350,7 @@ public class ProductResourceIntTest {
     @Transactional
     public void searchProduct() throws Exception {
         // Initialize the database
-        productRepository.saveAndFlush(product);
-        productSearchRepository.save(product);
+        productService.save(product);
 
         // Search the product
         restProductMockMvc.perform(get("/api/_search/products?query=id:" + product.getId()))

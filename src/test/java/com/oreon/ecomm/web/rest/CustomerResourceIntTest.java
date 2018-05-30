@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.Customer;
 import com.oreon.ecomm.repository.CustomerRepository;
+import com.oreon.ecomm.service.CustomerService;
 import com.oreon.ecomm.repository.search.CustomerSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -71,6 +72,9 @@ public class CustomerResourceIntTest {
     private CustomerRepository customerRepository;
 
     @Autowired
+    private CustomerService customerService;
+
+    @Autowired
     private CustomerSearchRepository customerSearchRepository;
 
     @Autowired
@@ -92,7 +96,7 @@ public class CustomerResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final CustomerResource customerResource = new CustomerResource(customerRepository, customerSearchRepository);
+        final CustomerResource customerResource = new CustomerResource(customerService);
         this.restCustomerMockMvc = MockMvcBuilders.standaloneSetup(customerResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -375,8 +379,8 @@ public class CustomerResourceIntTest {
     @Transactional
     public void updateCustomer() throws Exception {
         // Initialize the database
-        customerRepository.saveAndFlush(customer);
-        customerSearchRepository.save(customer);
+        customerService.save(customer);
+
         int databaseSizeBeforeUpdate = customerRepository.findAll().size();
 
         // Update the customer
@@ -440,8 +444,8 @@ public class CustomerResourceIntTest {
     @Transactional
     public void deleteCustomer() throws Exception {
         // Initialize the database
-        customerRepository.saveAndFlush(customer);
-        customerSearchRepository.save(customer);
+        customerService.save(customer);
+
         int databaseSizeBeforeDelete = customerRepository.findAll().size();
 
         // Get the customer
@@ -462,8 +466,7 @@ public class CustomerResourceIntTest {
     @Transactional
     public void searchCustomer() throws Exception {
         // Initialize the database
-        customerRepository.saveAndFlush(customer);
-        customerSearchRepository.save(customer);
+        customerService.save(customer);
 
         // Search the customer
         restCustomerMockMvc.perform(get("/api/_search/customers?query=id:" + customer.getId()))

@@ -2,14 +2,17 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.Shipment;
-
-import com.oreon.ecomm.repository.ShipmentRepository;
-import com.oreon.ecomm.repository.search.ShipmentSearchRepository;
+import com.oreon.ecomm.service.ShipmentService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
+import com.oreon.ecomm.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +37,10 @@ public class ShipmentResource {
 
     private static final String ENTITY_NAME = "shipment";
 
-    private final ShipmentRepository shipmentRepository;
+    private final ShipmentService shipmentService;
 
-    private final ShipmentSearchRepository shipmentSearchRepository;
-
-    public ShipmentResource(ShipmentRepository shipmentRepository, ShipmentSearchRepository shipmentSearchRepository) {
-        this.shipmentRepository = shipmentRepository;
-        this.shipmentSearchRepository = shipmentSearchRepository;
+    public ShipmentResource(ShipmentService shipmentService) {
+        this.shipmentService = shipmentService;
     }
 
     /**
@@ -58,8 +57,7 @@ public class ShipmentResource {
         if (shipment.getId() != null) {
             throw new BadRequestAlertException("A new shipment cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Shipment result = shipmentRepository.save(shipment);
-        shipmentSearchRepository.save(result);
+        Shipment result = shipmentService.save(shipment);
         return ResponseEntity.created(new URI("/api/shipments/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +79,7 @@ public class ShipmentResource {
         if (shipment.getId() == null) {
             return createShipment(shipment);
         }
-        Shipment result = shipmentRepository.save(shipment);
-        shipmentSearchRepository.save(result);
+        Shipment result = shipmentService.save(shipment);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, shipment.getId().toString()))
             .body(result);
@@ -91,14 +88,17 @@ public class ShipmentResource {
     /**
      * GET  /shipments : get all the shipments.
      *
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of shipments in body
      */
     @GetMapping("/shipments")
     @Timed
-    public List<Shipment> getAllShipments() {
-        log.debug("REST request to get all Shipments");
-        return shipmentRepository.findAll();
-        }
+    public ResponseEntity<List<Shipment>> getAllShipments(Pageable pageable) {
+        log.debug("REST request to get a page of Shipments");
+        Page<Shipment> page = shipmentService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/shipments");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     /**
      * GET  /shipments/:id : get the "id" shipment.
@@ -110,7 +110,7 @@ public class ShipmentResource {
     @Timed
     public ResponseEntity<Shipment> getShipment(@PathVariable Long id) {
         log.debug("REST request to get Shipment : {}", id);
-        Shipment shipment = shipmentRepository.findOne(id);
+        Shipment shipment = shipmentService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(shipment));
     }
 
@@ -124,8 +124,7 @@ public class ShipmentResource {
     @Timed
     public ResponseEntity<Void> deleteShipment(@PathVariable Long id) {
         log.debug("REST request to delete Shipment : {}", id);
-        shipmentRepository.delete(id);
-        shipmentSearchRepository.delete(id);
+        shipmentService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -134,15 +133,16 @@ public class ShipmentResource {
      * to the query.
      *
      * @param query the query of the shipment search
+     * @param pageable the pagination information
      * @return the result of the search
      */
     @GetMapping("/_search/shipments")
     @Timed
-    public List<Shipment> searchShipments(@RequestParam String query) {
-        log.debug("REST request to search Shipments for query {}", query);
-        return StreamSupport
-            .stream(shipmentSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<Shipment>> searchShipments(@RequestParam String query, Pageable pageable) {
+        log.debug("REST request to search for a page of Shipments for query {}", query);
+        Page<Shipment> page = shipmentService.search(query, pageable);
+        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/shipments");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

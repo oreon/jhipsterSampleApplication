@@ -13,6 +13,7 @@ import {
     InvoiceDeleteDialogComponent,
     invoiceRoute,
     invoicePopupRoute,
+    InvoiceResolvePagingParams,
 } from './';
 
 const ENTITY_STATES = [
@@ -43,6 +44,7 @@ const ENTITY_STATES = [
     providers: [
         InvoiceService,
         InvoicePopupService,
+        InvoiceResolvePagingParams,
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })

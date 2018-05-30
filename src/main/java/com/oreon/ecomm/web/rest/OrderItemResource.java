@@ -2,14 +2,17 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.OrderItem;
-
-import com.oreon.ecomm.repository.OrderItemRepository;
-import com.oreon.ecomm.repository.search.OrderItemSearchRepository;
+import com.oreon.ecomm.service.OrderItemService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
+import com.oreon.ecomm.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +37,10 @@ public class OrderItemResource {
 
     private static final String ENTITY_NAME = "orderItem";
 
-    private final OrderItemRepository orderItemRepository;
+    private final OrderItemService orderItemService;
 
-    private final OrderItemSearchRepository orderItemSearchRepository;
-
-    public OrderItemResource(OrderItemRepository orderItemRepository, OrderItemSearchRepository orderItemSearchRepository) {
-        this.orderItemRepository = orderItemRepository;
-        this.orderItemSearchRepository = orderItemSearchRepository;
+    public OrderItemResource(OrderItemService orderItemService) {
+        this.orderItemService = orderItemService;
     }
 
     /**
@@ -58,8 +57,7 @@ public class OrderItemResource {
         if (orderItem.getId() != null) {
             throw new BadRequestAlertException("A new orderItem cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        OrderItem result = orderItemRepository.save(orderItem);
-        orderItemSearchRepository.save(result);
+        OrderItem result = orderItemService.save(orderItem);
         return ResponseEntity.created(new URI("/api/order-items/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +79,7 @@ public class OrderItemResource {
         if (orderItem.getId() == null) {
             return createOrderItem(orderItem);
         }
-        OrderItem result = orderItemRepository.save(orderItem);
-        orderItemSearchRepository.save(result);
+        OrderItem result = orderItemService.save(orderItem);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, orderItem.getId().toString()))
             .body(result);
@@ -91,14 +88,17 @@ public class OrderItemResource {
     /**
      * GET  /order-items : get all the orderItems.
      *
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of orderItems in body
      */
     @GetMapping("/order-items")
     @Timed
-    public List<OrderItem> getAllOrderItems() {
-        log.debug("REST request to get all OrderItems");
-        return orderItemRepository.findAll();
-        }
+    public ResponseEntity<List<OrderItem>> getAllOrderItems(Pageable pageable) {
+        log.debug("REST request to get a page of OrderItems");
+        Page<OrderItem> page = orderItemService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/order-items");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     /**
      * GET  /order-items/:id : get the "id" orderItem.
@@ -110,7 +110,7 @@ public class OrderItemResource {
     @Timed
     public ResponseEntity<OrderItem> getOrderItem(@PathVariable Long id) {
         log.debug("REST request to get OrderItem : {}", id);
-        OrderItem orderItem = orderItemRepository.findOne(id);
+        OrderItem orderItem = orderItemService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(orderItem));
     }
 
@@ -124,8 +124,7 @@ public class OrderItemResource {
     @Timed
     public ResponseEntity<Void> deleteOrderItem(@PathVariable Long id) {
         log.debug("REST request to delete OrderItem : {}", id);
-        orderItemRepository.delete(id);
-        orderItemSearchRepository.delete(id);
+        orderItemService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -134,15 +133,16 @@ public class OrderItemResource {
      * to the query.
      *
      * @param query the query of the orderItem search
+     * @param pageable the pagination information
      * @return the result of the search
      */
     @GetMapping("/_search/order-items")
     @Timed
-    public List<OrderItem> searchOrderItems(@RequestParam String query) {
-        log.debug("REST request to search OrderItems for query {}", query);
-        return StreamSupport
-            .stream(orderItemSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<OrderItem>> searchOrderItems(@RequestParam String query, Pageable pageable) {
+        log.debug("REST request to search for a page of OrderItems for query {}", query);
+        Page<OrderItem> page = orderItemService.search(query, pageable);
+        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/order-items");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

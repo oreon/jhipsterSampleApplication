@@ -2,14 +2,17 @@ package com.oreon.ecomm.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.oreon.ecomm.domain.Customer;
-
-import com.oreon.ecomm.repository.CustomerRepository;
-import com.oreon.ecomm.repository.search.CustomerSearchRepository;
+import com.oreon.ecomm.service.CustomerService;
 import com.oreon.ecomm.web.rest.errors.BadRequestAlertException;
 import com.oreon.ecomm.web.rest.util.HeaderUtil;
+import com.oreon.ecomm.web.rest.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +22,6 @@ import java.net.URISyntaxException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -35,13 +37,10 @@ public class CustomerResource {
 
     private static final String ENTITY_NAME = "customer";
 
-    private final CustomerRepository customerRepository;
+    private final CustomerService customerService;
 
-    private final CustomerSearchRepository customerSearchRepository;
-
-    public CustomerResource(CustomerRepository customerRepository, CustomerSearchRepository customerSearchRepository) {
-        this.customerRepository = customerRepository;
-        this.customerSearchRepository = customerSearchRepository;
+    public CustomerResource(CustomerService customerService) {
+        this.customerService = customerService;
     }
 
     /**
@@ -58,8 +57,7 @@ public class CustomerResource {
         if (customer.getId() != null) {
             throw new BadRequestAlertException("A new customer cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Customer result = customerRepository.save(customer);
-        customerSearchRepository.save(result);
+        Customer result = customerService.save(customer);
         return ResponseEntity.created(new URI("/api/customers/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,8 +79,7 @@ public class CustomerResource {
         if (customer.getId() == null) {
             return createCustomer(customer);
         }
-        Customer result = customerRepository.save(customer);
-        customerSearchRepository.save(result);
+        Customer result = customerService.save(customer);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, customer.getId().toString()))
             .body(result);
@@ -91,14 +88,17 @@ public class CustomerResource {
     /**
      * GET  /customers : get all the customers.
      *
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of customers in body
      */
     @GetMapping("/customers")
     @Timed
-    public List<Customer> getAllCustomers() {
-        log.debug("REST request to get all Customers");
-        return customerRepository.findAll();
-        }
+    public ResponseEntity<List<Customer>> getAllCustomers(Pageable pageable) {
+        log.debug("REST request to get a page of Customers");
+        Page<Customer> page = customerService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/customers");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     /**
      * GET  /customers/:id : get the "id" customer.
@@ -110,7 +110,7 @@ public class CustomerResource {
     @Timed
     public ResponseEntity<Customer> getCustomer(@PathVariable Long id) {
         log.debug("REST request to get Customer : {}", id);
-        Customer customer = customerRepository.findOne(id);
+        Customer customer = customerService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(customer));
     }
 
@@ -124,8 +124,7 @@ public class CustomerResource {
     @Timed
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         log.debug("REST request to delete Customer : {}", id);
-        customerRepository.delete(id);
-        customerSearchRepository.delete(id);
+        customerService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -134,15 +133,16 @@ public class CustomerResource {
      * to the query.
      *
      * @param query the query of the customer search
+     * @param pageable the pagination information
      * @return the result of the search
      */
     @GetMapping("/_search/customers")
     @Timed
-    public List<Customer> searchCustomers(@RequestParam String query) {
-        log.debug("REST request to search Customers for query {}", query);
-        return StreamSupport
-            .stream(customerSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    public ResponseEntity<List<Customer>> searchCustomers(@RequestParam String query, Pageable pageable) {
+        log.debug("REST request to search for a page of Customers for query {}", query);
+        Page<Customer> page = customerService.search(query, pageable);
+        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/customers");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

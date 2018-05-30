@@ -4,6 +4,7 @@ import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.ProductOrder;
 import com.oreon.ecomm.repository.ProductOrderRepository;
+import com.oreon.ecomm.service.ProductOrderService;
 import com.oreon.ecomm.repository.search.ProductOrderSearchRepository;
 import com.oreon.ecomm.web.rest.errors.ExceptionTranslator;
 
@@ -55,6 +56,9 @@ public class ProductOrderResourceIntTest {
     private ProductOrderRepository productOrderRepository;
 
     @Autowired
+    private ProductOrderService productOrderService;
+
+    @Autowired
     private ProductOrderSearchRepository productOrderSearchRepository;
 
     @Autowired
@@ -76,7 +80,7 @@ public class ProductOrderResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ProductOrderResource productOrderResource = new ProductOrderResource(productOrderRepository, productOrderSearchRepository);
+        final ProductOrderResource productOrderResource = new ProductOrderResource(productOrderService);
         this.restProductOrderMockMvc = MockMvcBuilders.standaloneSetup(productOrderResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -245,8 +249,8 @@ public class ProductOrderResourceIntTest {
     @Transactional
     public void updateProductOrder() throws Exception {
         // Initialize the database
-        productOrderRepository.saveAndFlush(productOrder);
-        productOrderSearchRepository.save(productOrder);
+        productOrderService.save(productOrder);
+
         int databaseSizeBeforeUpdate = productOrderRepository.findAll().size();
 
         // Update the productOrder
@@ -298,8 +302,8 @@ public class ProductOrderResourceIntTest {
     @Transactional
     public void deleteProductOrder() throws Exception {
         // Initialize the database
-        productOrderRepository.saveAndFlush(productOrder);
-        productOrderSearchRepository.save(productOrder);
+        productOrderService.save(productOrder);
+
         int databaseSizeBeforeDelete = productOrderRepository.findAll().size();
 
         // Get the productOrder
@@ -320,8 +324,7 @@ public class ProductOrderResourceIntTest {
     @Transactional
     public void searchProductOrder() throws Exception {
         // Initialize the database
-        productOrderRepository.saveAndFlush(productOrder);
-        productOrderSearchRepository.save(productOrder);
+        productOrderService.save(productOrder);
 
         // Search the productOrder
         restProductOrderMockMvc.perform(get("/api/_search/product-orders?query=id:" + productOrder.getId()))
