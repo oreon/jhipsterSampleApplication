@@ -41,6 +41,18 @@ public class CacheConfiguration {
             cm.createCache(com.oreon.ecomm.domain.User.class.getName(), jcacheConfiguration);
             cm.createCache(com.oreon.ecomm.domain.Authority.class.getName(), jcacheConfiguration);
             cm.createCache(com.oreon.ecomm.domain.User.class.getName() + ".authorities", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Product.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.ProductCategory.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.ProductCategory.class.getName() + ".products", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Customer.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Customer.class.getName() + ".orders", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.ProductOrder.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.ProductOrder.class.getName() + ".orderItems", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.ProductOrder.class.getName() + ".invoices", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.OrderItem.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Invoice.class.getName(), jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Invoice.class.getName() + ".shipments", jcacheConfiguration);
+            cm.createCache(com.oreon.ecomm.domain.Shipment.class.getName(), jcacheConfiguration);
             // jhipster-needle-ehcache-add-entry
         };
     }
