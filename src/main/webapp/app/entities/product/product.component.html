@@ -25,6 +25,7 @@
         </div>
     </div>
     <br/>
+<<<<<<< HEAD
     <div class="table-responsive" *ngIf="products">
         <table class="table table-striped">
             <thead>
@@ -55,37 +56,76 @@
                 <td>
                     <div *ngIf="product.productCategory">
                         <a [routerLink]="['../product-category', product.productCategory?.id ]" >{{product.productCategory?.name}}</a>
+=======
+    <div *ngIf="products">
+        <div class="list-group">
+            <a [routerLink]="['../product', product.id ]"
+               class="list-group-item list-group-item-action flex-column
+           align-items-start"
+               *ngFor="let product of products; trackBy: trackId">
+                <div class="row">
+                    <div class="col-2 col-xs-12 justify-content-center">
+                        <img [src]="'data:' + product.imageContentType +
+                        ';base64,' + product.image"
+                             style="max-height:150px;" alt="product image"/>
+>>>>>>> 35ed08b... update product listing page UI
                     </div>
-                </td>
-                <td class="text-right">
-                    <div class="btn-group flex-btn-group-container">
-                        <button type="submit"
-                                [routerLink]="['../product', product.id ]"
-                                class="btn btn-info btn-sm">
-                            <span class="fa fa-eye"></span>
-                            <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
-                        </button>
-                        <button type="submit"
-                                [routerLink]="['/', { outlets: { popup: 'product/'+ product.id + '/edit'} }]"
-                                replaceUrl="true"
-                                queryParamsHandling="merge"
-                                class="btn btn-primary btn-sm">
-                            <span class="fa fa-pencil"></span>
-                            <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
-                        </button>
-                        <button type="submit"
-                                [routerLink]="['/', { outlets: { popup: 'product/'+ product.id + '/delete'} }]"
-                                replaceUrl="true"
-                                queryParamsHandling="merge"
-                                class="btn btn-danger btn-sm">
-                            <span class="fa fa-remove"></span>
-                            <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
-                        </button>
+                    <div class="col col-xs-12">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{product.name}}</h5>
+                        <small *ngIf="product.productCategory">
+                            <a [routerLink]="['../product-category',
+                         product.productCategory?.id ]" >
+                                {{product.productCategory?.id}}
+                            </a>
+                        </small>
                     </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                    <small class="mb-1">{{product.description}}</small>
+                    <p class="mb-1">Price: {{product.price | currency:'USD'}}</p>
+                    <small>
+                        Size:
+                        <span jhiTranslate="{{'storeApp.Size.' +
+                     product.size}}">
+                        {{product.size}}
+                    </span>
+                    </small>
+                        <div *jhiHasAnyAuthority="'ROLE_ADMIN'">
+                            <button type="submit"
+                                    [routerLink]="['/',
+                                    { outlets: { popup: 'product/'+
+                                    product.id + '/edit'} }]"
+                                    replaceUrl="true"
+                                    queryParamsHandling="merge"
+                                    class="btn btn-primary btn-sm">
+                                <span class="fa fa-pencil"></span>
+                                <span class="d-none d-md-inline"
+                                      jhiTranslate="entity.action.edit">Edit</span>
+                            </button>
+                            <button type="submit"
+                                    [routerLink]="['/',
+                                    { outlets: { popup: 'product/'+
+                                     product.id + '/delete'} }]"
+                                    replaceUrl="true"
+                                    queryParamsHandling="merge"
+                                    class="btn btn-danger btn-sm">
+                                <span class="fa fa-remove"></span>
+                                <span class="d-none d-md-inline"
+                                      jhiTranslate="entity.action.delete">Delete</span>
+                            </button>
+                        </div>
+                </div>
+                </div>
+                </a>
+
+        </div>
+    </div>
+    <div *ngIf="products && products.length">
+        <div class="row justify-content-center">
+            <jhi-item-count [page]="page" [total]="queryCount" [maxSize]="5" [itemsPerPage]="itemsPerPage"></jhi-item-count>
+        </div>
+        <div class="row justify-content-center">
+            <ngb-pagination [collectionSize]="totalItems" [(page)]="page" [pageSize]="itemsPerPage" [maxSize]="5" [rotate]="true" [boundaryLinks]="true" (pageChange)="loadPage(page)"></ngb-pagination>
+        </div>
     </div>
     <div *ngIf="products && products.length">
         <div class="row justify-content-center">
