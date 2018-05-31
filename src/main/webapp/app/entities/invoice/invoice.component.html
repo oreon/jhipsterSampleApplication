@@ -36,7 +36,7 @@
             <th jhiSortBy="paymentMethod"><span jhiTranslate="jhipsterSampleApplicationApp.invoice.paymentMethod">Payment Method</span> <span class="fa fa-sort"></span></th>
             <th jhiSortBy="paymentDate"><span jhiTranslate="jhipsterSampleApplicationApp.invoice.paymentDate">Payment Date</span> <span class="fa fa-sort"></span></th>
             <th jhiSortBy="paymentAmount"><span jhiTranslate="jhipsterSampleApplicationApp.invoice.paymentAmount">Payment Amount</span> <span class="fa fa-sort"></span></th>
-            <th jhiSortBy="order.id"><span jhiTranslate="jhipsterSampleApplicationApp.invoice.order">Order</span> <span class="fa fa-sort"></span></th>
+            <th jhiSortBy="order.code"><span jhiTranslate="jhipsterSampleApplicationApp.invoice.order">Order</span> <span class="fa fa-sort"></span></th>
             <th></th>
             </tr>
             </thead>
@@ -51,7 +51,7 @@
                 <td>{{invoice.paymentAmount}}</td>
                 <td>
                     <div *ngIf="invoice.order">
-                        <a [routerLink]="['../product-order', invoice.order?.id ]" >{{invoice.order?.id}}</a>
+                        <a [routerLink]="['../product-order', invoice.order?.id ]" >{{invoice.order?.code}}</a>
                     </div>
                 </td>
                 <td class="text-right">

@@ -11,7 +11,7 @@
             "relationshipType": "many-to-one",
             "relationshipName": "order",
             "otherEntityName": "productOrder",
-            "otherEntityField": "id"
+            "otherEntityField": "code"
         }
     ],
     "fields": [
@@ -24,7 +24,10 @@
         },
         {
             "fieldName": "details",
-            "fieldType": "String"
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
         },
         {
             "fieldName": "status",

@@ -3,6 +3,7 @@ package com.oreon.ecomm.web.rest;
 import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.ProductOrder;
+import com.oreon.ecomm.domain.Customer;
 import com.oreon.ecomm.repository.ProductOrderRepository;
 import com.oreon.ecomm.service.ProductOrderService;
 import com.oreon.ecomm.repository.search.ProductOrderSearchRepository;
@@ -99,6 +100,11 @@ public class ProductOrderResourceIntTest {
             .placedDate(DEFAULT_PLACED_DATE)
             .status(DEFAULT_STATUS)
             .code(DEFAULT_CODE);
+        // Add required entity
+        Customer customer = CustomerResourceIntTest.createEntity(em);
+        em.persist(customer);
+        em.flush();
+        productOrder.setCustomer(customer);
         return productOrder;
     }
 

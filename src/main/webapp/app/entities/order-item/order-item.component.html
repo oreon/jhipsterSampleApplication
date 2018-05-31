@@ -33,8 +33,8 @@
             <th jhiSortBy="quantity"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.quantity">Quantity</span> <span class="fa fa-sort"></span></th>
             <th jhiSortBy="totalPrice"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.totalPrice">Total Price</span> <span class="fa fa-sort"></span></th>
             <th jhiSortBy="status"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.status">Status</span> <span class="fa fa-sort"></span></th>
-            <th jhiSortBy="product.id"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.product">Product</span> <span class="fa fa-sort"></span></th>
-            <th jhiSortBy="order.id"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.order">Order</span> <span class="fa fa-sort"></span></th>
+            <th jhiSortBy="product.name"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.product">Product</span> <span class="fa fa-sort"></span></th>
+            <th jhiSortBy="order.code"><span jhiTranslate="jhipsterSampleApplicationApp.orderItem.order">Order</span> <span class="fa fa-sort"></span></th>
             <th></th>
             </tr>
             </thead>
@@ -46,12 +46,12 @@
                 <td jhiTranslate="{{'jhipsterSampleApplicationApp.OrderItemStatus.' + orderItem.status}}">{{orderItem.status}}</td>
                 <td>
                     <div *ngIf="orderItem.product">
-                        <a [routerLink]="['../product', orderItem.product?.id ]" >{{orderItem.product?.id}}</a>
+                        <a [routerLink]="['../product', orderItem.product?.id ]" >{{orderItem.product?.name}}</a>
                     </div>
                 </td>
                 <td>
                     <div *ngIf="orderItem.order">
-                        <a [routerLink]="['../product-order', orderItem.order?.id ]" >{{orderItem.order?.id}}</a>
+                        <a [routerLink]="['../product-order', orderItem.order?.id ]" >{{orderItem.order?.code}}</a>
                     </div>
                 </td>
                 <td class="text-right">

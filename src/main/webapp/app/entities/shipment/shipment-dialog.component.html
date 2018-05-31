@@ -44,7 +44,7 @@
             <label class="form-control-label" jhiTranslate="jhipsterSampleApplicationApp.shipment.invoice" for="field_invoice">Invoice</label>
             <select class="form-control" id="field_invoice" name="invoice" [(ngModel)]="shipment.invoice" >
                 <option [ngValue]="null"></option>
-                <option [ngValue]="invoiceOption.id === shipment.invoice?.id ? shipment.invoice : invoiceOption" *ngFor="let invoiceOption of invoices; trackBy: trackInvoiceById">{{invoiceOption.id}}</option>
+                <option [ngValue]="invoiceOption.id === shipment.invoice?.id ? shipment.invoice : invoiceOption" *ngFor="let invoiceOption of invoices; trackBy: trackInvoiceById">{{invoiceOption.code}}</option>
             </select>
         </div>
     </div>

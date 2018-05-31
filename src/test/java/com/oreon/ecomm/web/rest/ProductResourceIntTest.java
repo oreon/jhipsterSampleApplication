@@ -3,6 +3,7 @@ package com.oreon.ecomm.web.rest;
 import com.oreon.ecomm.JhipsterSampleApplicationApp;
 
 import com.oreon.ecomm.domain.Product;
+import com.oreon.ecomm.domain.ProductCategory;
 import com.oreon.ecomm.repository.ProductRepository;
 import com.oreon.ecomm.service.ProductService;
 import com.oreon.ecomm.repository.search.ProductSearchRepository;
@@ -110,6 +111,11 @@ public class ProductResourceIntTest {
             .size(DEFAULT_SIZE)
             .image(DEFAULT_IMAGE)
             .imageContentType(DEFAULT_IMAGE_CONTENT_TYPE);
+        // Add required entity
+        ProductCategory productCategory = ProductCategoryResourceIntTest.createEntity(em);
+        em.persist(productCategory);
+        em.flush();
+        product.setProductCategory(productCategory);
         return product;
     }
 

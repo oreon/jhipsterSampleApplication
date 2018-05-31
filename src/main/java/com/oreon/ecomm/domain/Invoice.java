@@ -38,7 +38,8 @@ public class Invoice implements Serializable {
     @Column(name = "jhi_date", nullable = false)
     private Instant date;
 
-    @Column(name = "details")
+    @NotNull
+    @Column(name = "details", nullable = false)
     private String details;
 
     @NotNull

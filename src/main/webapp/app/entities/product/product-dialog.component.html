@@ -82,10 +82,16 @@
 
         <div class="form-group">
             <label class="form-control-label" jhiTranslate="jhipsterSampleApplicationApp.product.productCategory" for="field_productCategory">Product Category</label>
-            <select class="form-control" id="field_productCategory" name="productCategory" [(ngModel)]="product.productCategory" >
-                <option [ngValue]="null"></option>
-                <option [ngValue]="productCategoryOption.id === product.productCategory?.id ? product.productCategory : productCategoryOption" *ngFor="let productCategoryOption of productcategories; trackBy: trackProductCategoryById">{{productCategoryOption.id}}</option>
+            <select class="form-control" id="field_productCategory" name="productCategory" [(ngModel)]="product.productCategory"  required>
+                <option *ngIf="!editForm.value.productCategory" [ngValue]="null" selected></option>
+                <option [ngValue]="productCategoryOption.id === product.productCategory?.id ? product.productCategory : productCategoryOption" *ngFor="let productCategoryOption of productcategories; trackBy: trackProductCategoryById">{{productCategoryOption.name}}</option>
             </select>
+        </div>
+        <div [hidden]="!(editForm.controls.productCategory?.dirty && editForm.controls.productCategory?.invalid)">
+            <small class="form-text text-danger"
+                [hidden]="!editForm.controls.productCategory?.errors?.required" jhiTranslate="entity.validation.required">
+                This field is required.
+            </small>
         </div>
     </div>
     <div class="modal-footer">

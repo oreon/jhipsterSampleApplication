@@ -188,6 +188,24 @@ public class InvoiceResourceIntTest {
 
     @Test
     @Transactional
+    public void checkDetailsIsRequired() throws Exception {
+        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+        // set the field null
+        invoice.setDetails(null);
+
+        // Create the Invoice, which fails.
+
+        restInvoiceMockMvc.perform(post("/api/invoices")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(invoice)))
+            .andExpect(status().isBadRequest());
+
+        List<Invoice> invoiceList = invoiceRepository.findAll();
+        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
     public void checkStatusIsRequired() throws Exception {
         int databaseSizeBeforeTest = invoiceRepository.findAll().size();
         // set the field null
